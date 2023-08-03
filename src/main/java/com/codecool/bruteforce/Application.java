@@ -1,6 +1,7 @@
 package com.codecool.bruteforce;
 
 import com.codecool.bruteforce.authentication.AuthenticationService;
+import com.codecool.bruteforce.logger.ConsoleLogger;
 import com.codecool.bruteforce.logger.Logger;
 import com.codecool.bruteforce.passwords.breaker.PasswordBreakerImpl;
 import com.codecool.bruteforce.passwords.generator.PasswordGenerator;
@@ -8,9 +9,11 @@ import com.codecool.bruteforce.passwords.generator.PasswordGeneratorImpl;
 import com.codecool.bruteforce.passwords.model.AsciiTableRange;
 import com.codecool.bruteforce.users.generator.UserGenerator;
 import com.codecool.bruteforce.users.generator.UserGeneratorImpl;
+import com.codecool.bruteforce.users.model.User;
 import com.codecool.bruteforce.users.repository.UserRepository;
 import com.codecool.bruteforce.users.repository.UserRepositoryImpl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Application {
@@ -23,12 +26,16 @@ public class Application {
 
     public static void main(String[] args) {
 
-        String dbFile = "src/resources/Users.db";
-
+        String dbFile = "/Users/gaborattila/Projects/CodeCool/Java/bruteforce-java-gaborati/src/main/resources/Users.db";
+        Logger logger = new ConsoleLogger();
         UserRepository userRepository = new UserRepositoryImpl(dbFile, logger);
         userRepository.deleteAll();
 
+
         List<PasswordGenerator> passwordGenerators = createPasswordGenerators();
+
+
+       //USer generator
         UserGenerator userGenerator = new UserGeneratorImpl(logger, passwordGenerators);
         int userCount = 10;
         int maxPwLength = 4;
@@ -42,19 +49,25 @@ public class Application {
 
     }
 
-    private static void addUsersToDb(int count, int maxPwLength, UserGenerator userGenerator,
-                                     UserRepository userRepository)
-    {
+    private static void addUsersToDb(int count, int maxPwLength, UserGenerator userGenerator,UserRepository userRepository){
+        List<User> generatedUsers = userGenerator.generate(count, maxPwLength);
+
+        for (User user : generatedUsers) {
+            userRepository.add(user.userName(), user.password());
+        }
     }
 
+
+
     private static List<PasswordGenerator> createPasswordGenerators() {
+        String numberChars = "0123456789";
         var lowercasePwGen = new PasswordGeneratorImpl(lowercaseChars);
         var uppercasePwGen = new PasswordGeneratorImpl(lowercaseChars, uppercaseChars);
-        PasswordGenerator numbersPwGen = null; // lowercase + uppercase + numbers
+        var numbersPwGen = new PasswordGeneratorImpl(lowercaseChars, uppercaseChars,numbers);
 
         return List.of(lowercasePwGen, uppercasePwGen, numbersPwGen);
     }
-
+/*
     private static void breakUsers(int userCount, int maxPwLength, AuthenticationService authenticationService) {
         var passwordBreaker = new PasswordBreakerImpl();
         logger.logInfo("Initiating password breaker...\n");
@@ -87,5 +100,8 @@ public class Application {
     }
 
 
+    }
+*/
 
-}
+    }
+
